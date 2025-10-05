@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadF
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from .job_manager import JobManager
 
@@ -27,6 +28,8 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+load_dotenv()
 
 PIN_CODE = os.getenv("GRADEFACTORY_PIN")
 
