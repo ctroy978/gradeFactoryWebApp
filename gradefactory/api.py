@@ -7,6 +7,7 @@ from typing import List
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from .job_manager import JobManager
 
@@ -17,6 +18,14 @@ STATIC_DIR = BASE_DIR / 'static'
 app = FastAPI(title="GradeFactory Web API", version="0.1.0")
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 manager = JobManager()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 
 def _require_pdfs(files: List[UploadFile]) -> None:
