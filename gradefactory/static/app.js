@@ -9,6 +9,24 @@ if (pinValue === null || pinValue === '') {
   pinValue = null;
 }
 
+const BASE_PATH = (() => {
+  let path = window.location.pathname;
+  if (path.endsWith('index.html')) {
+    path = path.slice(0, -'index.html'.length);
+  }
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
+  return path === '/' ? '' : path;
+})();
+
+function withBase(path) {
+  if (!path.startsWith('/')) {
+    throw new Error('Route paths must start with a "/"');
+  }
+  return `${BASE_PATH}${path}`;
+}
+
 function buildHeaders(includePin) {
   const headers = {};
   if (includePin && pinValue) {
@@ -95,7 +113,7 @@ bindForm('full-form', async (data) => {
     data.append('raw_files', file);
   }
   data.append('rubric', rubricInput.files[0]);
-  await submitForm('/jobs/full', data);
+  await submitForm(withBase('/jobs/full'), data);
 });
 
 bindForm('process-form', async (data) => {
@@ -109,7 +127,7 @@ bindForm('process-form', async (data) => {
   for (const file of rawInput.files) {
     data.append('raw_files', file);
   }
-  await submitForm('/jobs/process', data);
+  await submitForm(withBase('/jobs/process'), data);
 });
 
 bindForm('grade-form', async (data) => {
@@ -123,12 +141,12 @@ bindForm('grade-form', async (data) => {
     data.append('processed_files', file);
   }
   data.append('rubric', rubricInput.files[0]);
-  await submitForm('/jobs/grade', data);
+  await submitForm(withBase('/jobs/grade'), data);
 });
 
 async function loadJobs() {
   try {
-    const response = await fetchWithPin('/jobs');
+    const response = await fetchWithPin(withBase('/jobs'));
     if (!response.ok) {
       throw new Error('Unable to fetch jobs');
     }
@@ -170,7 +188,7 @@ function renderJobs(jobs) {
 
 async function showJobDetail(jobId) {
   try {
-    const response = await fetchWithPin(`/jobs/${jobId}`);
+    const response = await fetchWithPin(withBase(`/jobs/${jobId}`));
     if (!response.ok) {
       throw new Error('Unable to fetch job detail');
     }
@@ -210,7 +228,7 @@ function renderJobDetail(job) {
         list.innerHTML = '<strong>Artifacts:</strong>';
         stage.output_files.forEach((artifact) => {
           const link = document.createElement('a');
-          link.href = `/jobs/${job.id}/artifacts/${artifact}`;
+          link.href = withBase(`/jobs/${job.id}/artifacts/${artifact}`);
           link.textContent = artifact;
           link.target = '_blank';
           list.appendChild(link);
@@ -230,7 +248,7 @@ async function deleteJob(jobId) {
     return;
   }
   try {
-    const response = await fetchWithPin(`/jobs/${jobId}`, { method: 'DELETE' });
+    const response = await fetchWithPin(withBase(`/jobs/${jobId}`), { method: 'DELETE' });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       const reason = payload.detail || response.statusText;
