@@ -3,7 +3,7 @@ body { margin: 0; padding: 20px; background: #f2f4f8; color: #212529; }
 header { margin-bottom: 20px; }
 header h1 { margin: 0; }
 main { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-section.panel { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+section.panel { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; }
 section.panel h2 { margin-top: 0; }
 label { display: block; margin-bottom: 12px; font-size: 0.9rem; }
 label.inline { display: flex; align-items: center; gap: 8px; }
@@ -13,17 +13,22 @@ button:hover { background: #003d99; }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 button.danger { background: #c92a2a; }
 button.danger:hover { background: #a51111; }
-table { width: 100%; border-collapse: collapse; margin-top: 12px; table-layout: fixed; }
+#jobs-panel { grid-column: 1 / -1; }
+#job-detail-panel { grid-column: 1 / -1; }
+#jobs-panel table { width: 100%; border-collapse: collapse; margin-top: 12px; table-layout: fixed; }
 th, td { border-bottom: 1px solid #dee2e6; padding: 8px; font-size: 0.85rem; text-align: left; }
 tr:hover { background: #f8f9fa; }
 .job-id { font-family: "Courier New", monospace; font-size: 0.78rem; word-break: break-all; }
 .job-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-#jobs-table-container { overflow-x: auto; }
+#jobs-table-container { overflow-x: auto; flex: 1; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #job-detail pre { background: #f8f9fa; padding: 12px; border-radius: 4px; overflow: auto; }
 #job-detail .artifact-list { margin-top: 12px; }
 #job-detail .artifact-list a { display: block; margin-bottom: 4px; color: #0052cc; text-decoration: none; }
 #job-detail .artifact-list a:hover { text-decoration: underline; }
-#job-detail-panel { grid-column: 1 / -1; }
 form { display: flex; flex-direction: column; gap: 8px; }
 form button { align-self: flex-start; }
 form input[type="file"] { width: 100%; }
+@media (max-width: 768px) {
+  main { grid-template-columns: 1fr; }
+}
