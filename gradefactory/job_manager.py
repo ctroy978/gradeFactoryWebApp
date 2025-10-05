@@ -245,8 +245,7 @@ class JobManager:
             if stage:
                 stage.status = JOB_STATUS_FAILED
                 if stage.stderr:
-                    stage.stderr += f"
-{message}"
+                    stage.stderr += f"\n{message}"
                 else:
                     stage.stderr = message
 
