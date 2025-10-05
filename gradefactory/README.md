@@ -52,3 +52,37 @@ For JSON rubrics, the structure should include the rubric content. For essay tes
 ```
 
 The `question` field provides the essay prompt for context. The `correct_answers` array provides sample correct responses to guide the AI in evaluating accuracy and relevance.
+## Web API
+
+A FastAPI service is available for triggering runs from a browser or intranet tool. Start it with uvicorn:
+
+```bash
+uvicorn gradefactory.api:app --host 0.0.0.0 --port 8000
+```
+
+### Endpoints
+
+- `POST /jobs/process` — upload one or more raw PDF essays as `raw_files`. Optional `name_flag` form field mirrors the CLI flag.
+- `POST /jobs/grade` — upload processed PDF essays as `processed_files` and a rubric file (PDF or JSON) as `rubric`.
+- `POST /jobs/full` — upload raw PDF essays plus a rubric and run OCR + grading in one shot.
+- `GET /jobs` — list active and completed jobs with their current status.
+- `GET /jobs/{job_id}` — return detailed stage results (logs and generated files) for a single job.
+- `GET /jobs/{job_id}/artifacts/{path}` — download any generated PDF/CSV relative to the job workspace (paths are returned in the job detail response).
+
+### Job lifecycle
+
+Each request is executed asynchronously in a background worker. Job status values are:
+
+- `pending` — accepted and waiting for a worker.
+- `running` — at least one stage is currently executing.
+- `completed` — all required stages finished successfully.
+- `failed` — a stage raised an error; check the stage `stderr` field in the job detail payload.
+
+Artifacts for each job are stored under `jobs/<job_id>/` with subfolders:
+
+- `raw/` — original uploads for processing.
+- `processed/` — cleaned PDFs ready for grading.
+- `graded/` — grading reports and the batch CSV summary.
+- `rubric/` — the rubric that was uploaded with the job.
+
+Returned artifact paths are relative to the job root so they can be passed straight into the download endpoint.

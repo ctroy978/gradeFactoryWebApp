@@ -7,3 +7,6 @@ google-cloud-vision
 pypdfium2
 Pillow
 requests
+fastapi
+uvicorn
+python-multipart
