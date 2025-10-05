@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +27,15 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+PIN_CODE = os.getenv("GRADEFACTORY_PIN")
+
+
+def require_pin(x_gradefactory_pin: Optional[str] = Header(default=None)) -> None:
+    if not PIN_CODE:
+        return
+    if x_gradefactory_pin != PIN_CODE:
+        raise HTTPException(status_code=401, detail="Invalid or missing access PIN")
 
 
 def _require_pdfs(files: List[UploadFile]) -> None:
@@ -57,7 +67,7 @@ def healthcheck() -> dict:
 
 
 @app.get("/jobs")
-def list_jobs() -> List[dict]:
+def list_jobs(_: None = Depends(require_pin)) -> List[dict]:
     snapshots: List[dict] = []
     for record in manager.list_jobs():
         snapshot = manager.snapshot(record.job_id)
@@ -67,7 +77,7 @@ def list_jobs() -> List[dict]:
 
 
 @app.get("/jobs/{job_id}")
-def get_job(job_id: str) -> dict:
+def get_job(job_id: str, _: None = Depends(require_pin)) -> dict:
     snapshot = manager.snapshot(job_id)
     if not snapshot:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -75,7 +85,7 @@ def get_job(job_id: str) -> dict:
 
 
 @app.delete("/jobs/{job_id}")
-def delete_job(job_id: str) -> dict:
+def delete_job(job_id: str, _: None = Depends(require_pin)) -> dict:
     try:
         manager.delete_job(job_id)
     except KeyError:
@@ -89,6 +99,7 @@ def delete_job(job_id: str) -> dict:
 async def create_processing_job(
     raw_files: List[UploadFile] = File(..., description="Raw PDF essays to process"),
     name_flag: bool = Form(True),
+    _: None = Depends(require_pin),
 ) -> dict:
     if not raw_files:
         raise HTTPException(status_code=400, detail="At least one PDF must be uploaded.")
@@ -112,6 +123,7 @@ async def create_processing_job(
 async def create_grading_job(
     processed_files: List[UploadFile] = File(..., description="Processed PDF essays ready for grading"),
     rubric: UploadFile = File(..., description="Rubric file (PDF or JSON)"),
+    _: None = Depends(require_pin),
 ) -> dict:
     if not processed_files:
         raise HTTPException(status_code=400, detail="At least one processed PDF must be uploaded.")
@@ -141,6 +153,7 @@ async def create_full_pipeline_job(
     raw_files: List[UploadFile] = File(..., description="Raw PDF essays to process and grade"),
     rubric: UploadFile = File(..., description="Rubric file (PDF or JSON)"),
     name_flag: bool = Form(True),
+    _: None = Depends(require_pin),
 ) -> dict:
     if not raw_files:
         raise HTTPException(status_code=400, detail="At least one PDF must be uploaded.")
@@ -166,7 +179,7 @@ async def create_full_pipeline_job(
 
 
 @app.get("/jobs/{job_id}/artifacts/{artifact_path:path}")
-def download_artifact(job_id: str, artifact_path: str):
+def download_artifact(job_id: str, artifact_path: str, _: None = Depends(require_pin)):
     job = manager.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")

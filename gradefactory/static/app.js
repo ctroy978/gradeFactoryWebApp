@@ -4,9 +4,49 @@ const jobDetailTarget = document.getElementById('job-detail');
 const closeDetailButton = document.getElementById('close-detail');
 const refreshJobsButton = document.getElementById('refresh-jobs');
 
+let pinValue = localStorage.getItem('gradefactoryPin');
+if (pinValue === null || pinValue === '') {
+  pinValue = null;
+}
+
+function buildHeaders(includePin) {
+  const headers = {};
+  if (includePin && pinValue) {
+    headers['X-GradeFactory-Pin'] = pinValue;
+  }
+  return headers;
+}
+
+async function fetchWithPin(url, options = {}) {
+  const attempt = async (withPin) => {
+    const headers = { ...(options.headers || {}), ...buildHeaders(withPin) };
+    return fetch(url, { ...options, headers });
+  };
+
+  let response = await attempt(Boolean(pinValue));
+  if (response.status !== 401) {
+    return response;
+  }
+
+  const entered = window.prompt('Enter the access PIN to continue:');
+  if (!entered) {
+    throw new Error('PIN required to continue');
+  }
+  pinValue = entered.trim();
+  localStorage.setItem('gradefactoryPin', pinValue);
+
+  response = await attempt(true);
+  if (response.status === 401) {
+    localStorage.removeItem('gradefactoryPin');
+    pinValue = null;
+    throw new Error('Invalid PIN');
+  }
+  return response;
+}
+
 async function submitForm(endpoint, formData) {
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetchWithPin(endpoint, {
       method: 'POST',
       body: formData,
     });
@@ -88,7 +128,7 @@ bindForm('grade-form', async (data) => {
 
 async function loadJobs() {
   try {
-    const response = await fetch('/jobs');
+    const response = await fetchWithPin('/jobs');
     if (!response.ok) {
       throw new Error('Unable to fetch jobs');
     }
@@ -130,7 +170,7 @@ function renderJobs(jobs) {
 
 async function showJobDetail(jobId) {
   try {
-    const response = await fetch(`/jobs/${jobId}`);
+    const response = await fetchWithPin(`/jobs/${jobId}`);
     if (!response.ok) {
       throw new Error('Unable to fetch job detail');
     }
@@ -190,7 +230,7 @@ async function deleteJob(jobId) {
     return;
   }
   try {
-    const response = await fetch(`/jobs/${jobId}`, { method: 'DELETE' });
+    const response = await fetchWithPin(`/jobs/${jobId}`, { method: 'DELETE' });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       const reason = payload.detail || response.statusText;

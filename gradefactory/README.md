@@ -91,3 +91,7 @@ Returned artifact paths are relative to the job root so they can be passed strai
 
 A minimal web dashboard is bundled with the API. Once the uvicorn server is running, open `http://localhost:8000/` to upload PDFs, start jobs, and monitor progress. The page polls `/jobs` for updates and links directly to generated PDFs/CSVs via the download endpoint.
 Jobs remain on disk until you delete them. The dashboard's delete action removes both the job record and its workspace under `jobs/<job_id>/`.
+When a stage outputs multiple files, an `*_artifacts.zip` bundle is created automatically for quicker downloads.
+
+If you set the optional `GRADEFACTORY_PIN` environment variable before starting uvicorn, all API requests must provide the same value in the `X-GradeFactory-Pin` header. The bundled dashboard will prompt for the PIN and store it locally; unauthorized requests receive HTTP 401 responses.
+
