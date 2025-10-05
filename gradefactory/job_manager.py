@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 import shutil
+import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -240,10 +241,51 @@ class JobManager:
             stage.status = JOB_STATUS_COMPLETED
             stage.stdout = result.stdout
             stage.stderr = result.stderr
+
+            bundle_path = self._bundle_stage_outputs(record, stage_name, result.output_files)
+
             stage.output_files = [
                 self._relative_output(record.paths.root, Path(path)) for path in result.output_files
             ]
+            if bundle_path:
+                stage.output_files.append(self._relative_output(record.paths.root, bundle_path))
+
             record.updated_at = datetime.now(timezone.utc)
+
+    def _bundle_stage_outputs(
+        self,
+        record: JobRecord,
+        stage_name: str,
+        output_files: Sequence[Path],
+    ) -> Optional[Path]:
+        if not output_files:
+            return None
+
+        job_root = record.paths.root
+        artifact_dir = record.paths.artifacts
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+
+        bundle_candidates: List[Path] = []
+        for file_path in output_files:
+            path_obj = Path(file_path)
+            if not path_obj.exists() or not path_obj.is_file():
+                continue
+            try:
+                path_obj.relative_to(job_root)
+            except ValueError:
+                continue
+            bundle_candidates.append(path_obj)
+
+        if not bundle_candidates:
+            return None
+
+        bundle_path = artifact_dir / f"{stage_name}_artifacts.zip"
+        with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for file_path in bundle_candidates:
+                arcname = file_path.relative_to(job_root)
+                archive.write(file_path, arcname)
+
+        return bundle_path
 
     def _fail_stage(self, job_id: str, stage_name: str, exc: Exception) -> None:
         message = str(exc)
