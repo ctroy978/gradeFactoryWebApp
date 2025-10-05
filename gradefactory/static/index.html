@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GradeFactory Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>GradeFactory</h1>
+    <p>Run OCR + grading jobs and monitor their progress.</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Full Pipeline</h2>
+      <form id="full-form">
+        <label>Raw PDFs
+          <input type="file" id="full-raw" name="raw_files" accept="application/pdf" multiple required>
+        </label>
+        <label>Rubric (PDF or JSON)
+          <input type="file" id="full-rubric" name="rubric" accept="application/pdf,application/json" required>
+        </label>
+        <label class="inline">
+          <input type="checkbox" id="full-name-flag" checked>
+          Use student name when available
+        </label>
+        <button type="submit">Start Full Pipeline</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Process Only</h2>
+      <form id="process-form">
+        <label>Raw PDFs
+          <input type="file" id="process-raw" name="raw_files" accept="application/pdf" multiple required>
+        </label>
+        <label class="inline">
+          <input type="checkbox" id="process-name-flag" checked>
+          Use student name when available
+        </label>
+        <button type="submit">Start Processing</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Grade Only</h2>
+      <form id="grade-form">
+        <label>Processed PDFs
+          <input type="file" id="grade-processed" name="processed_files" accept="application/pdf" multiple required>
+        </label>
+        <label>Rubric (PDF or JSON)
+          <input type="file" id="grade-rubric" name="rubric" accept="application/pdf,application/json" required>
+        </label>
+        <button type="submit">Start Grading</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Jobs</h2>
+        <button id="refresh-jobs" type="button">Refresh</button>
+      </div>
+      <div id="jobs-table-container"></div>
+    </section>
+
+    <section class="panel" id="job-detail-panel" hidden>
+      <div class="panel-header">
+        <h2>Job Detail</h2>
+        <button id="close-detail" type="button">Close</button>
+      </div>
+      <div id="job-detail"></div>
+    </section>
+  </main>
+
+  <template id="job-row-template">
+    <tr>
+      <td class="job-id"></td>
+      <td class="job-type"></td>
+      <td class="job-status"></td>
+      <td class="job-updated"></td>
+      <td><button class="view-job">View</button></td>
+    </tr>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -86,3 +86,7 @@ Artifacts for each job are stored under `jobs/<job_id>/` with subfolders:
 - `rubric/` — the rubric that was uploaded with the job.
 
 Returned artifact paths are relative to the job root so they can be passed straight into the download endpoint.
+
+### Browser dashboard
+
+A minimal web dashboard is bundled with the API. Once the uvicorn server is running, open `http://localhost:8000/` to upload PDFs, start jobs, and monitor progress. The page polls `/jobs` for updates and links directly to generated PDFs/CSVs via the download endpoint.

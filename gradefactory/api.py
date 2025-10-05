@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from typing import List
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .job_manager import JobManager
 
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / 'static'
+
 app = FastAPI(title="GradeFactory Web API", version="0.1.0")
+app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 manager = JobManager()
 
 
@@ -22,6 +30,16 @@ def _require_rubric(upload: UploadFile) -> None:
         raise HTTPException(status_code=400, detail="A rubric file is required.")
     if not (upload.filename.lower().endswith(".pdf") or upload.filename.lower().endswith(".json")):
         raise HTTPException(status_code=400, detail="Rubric must be a PDF or JSON file.")
+
+
+
+
+@app.get("/")
+def index() -> FileResponse:
+    index_path = STATIC_DIR / 'index.html'
+    if not index_path.exists():
+        raise HTTPException(status_code=500, detail='UI assets missing')
+    return FileResponse(index_path)
 
 
 @app.get("/health")
