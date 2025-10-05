@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+import shutil
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -76,6 +77,18 @@ class JobManager:
     def get_job(self, job_id: str) -> Optional[JobRecord]:
         with self._lock:
             return self.jobs.get(job_id)
+
+    def delete_job(self, job_id: str, *, remove_files: bool = True) -> JobRecord:
+        with self._lock:
+            record = self.jobs.get(job_id)
+            if not record:
+                raise KeyError(job_id)
+            if record.status in {JOB_STATUS_PENDING, JOB_STATUS_RUNNING}:
+                raise RuntimeError('Cannot delete a job that is pending or running.')
+            del self.jobs[job_id]
+        if remove_files and record.paths.root.exists():
+            shutil.rmtree(record.paths.root, ignore_errors=True)
+        return record
 
     def snapshot(self, job_id: str) -> Optional[Dict[str, object]]:
         record = self.get_job(job_id)

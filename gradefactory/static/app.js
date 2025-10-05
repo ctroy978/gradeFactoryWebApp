@@ -119,6 +119,7 @@ function renderJobs(jobs) {
       row.querySelector('.job-status').textContent = job.status;
       row.querySelector('.job-updated').textContent = new Date(job.updated_at).toLocaleString();
       row.querySelector('.view-job').addEventListener('click', () => showJobDetail(job.id));
+      row.querySelector('.delete-job').addEventListener('click', () => deleteJob(job.id));
       tbody.appendChild(row);
     });
 
@@ -141,6 +142,7 @@ async function showJobDetail(jobId) {
 }
 
 function renderJobDetail(job) {
+  jobDetailTarget.dataset.jobId = job.id;
   jobDetailTarget.innerHTML = '';
   const info = document.createElement('div');
   info.innerHTML = `
@@ -182,8 +184,33 @@ function renderJobDetail(job) {
   jobDetailPanel.hidden = false;
 }
 
+async function deleteJob(jobId) {
+  const confirmed = window.confirm('Delete this job and all generated artifacts?');
+  if (!confirmed) {
+    return;
+  }
+  try {
+    const response = await fetch(`/jobs/${jobId}`, { method: 'DELETE' });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      const reason = payload.detail || response.statusText;
+      throw new Error(reason);
+    }
+    if (jobDetailTarget.dataset.jobId && jobDetailTarget.dataset.jobId === jobId) {
+      jobDetailTarget.dataset.jobId = '';
+      jobDetailPanel.hidden = true;
+      jobDetailTarget.innerHTML = '';
+    }
+    await loadJobs();
+  } catch (error) {
+    alert(`Unable to delete job: ${error.message}`);
+  }
+}
+
 closeDetailButton.addEventListener('click', () => {
+  jobDetailTarget.dataset.jobId = '';
   jobDetailPanel.hidden = true;
+  jobDetailTarget.innerHTML = '';
 });
 
 refreshJobsButton.addEventListener('click', loadJobs);

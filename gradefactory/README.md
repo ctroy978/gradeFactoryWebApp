@@ -90,3 +90,4 @@ Returned artifact paths are relative to the job root so they can be passed strai
 ### Browser dashboard
 
 A minimal web dashboard is bundled with the API. Once the uvicorn server is running, open `http://localhost:8000/` to upload PDFs, start jobs, and monitor progress. The page polls `/jobs` for updates and links directly to generated PDFs/CSVs via the download endpoint.
+Jobs remain on disk until you delete them. The dashboard's delete action removes both the job record and its workspace under `jobs/<job_id>/`.

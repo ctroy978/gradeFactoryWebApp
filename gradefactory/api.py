@@ -65,6 +65,17 @@ def get_job(job_id: str) -> dict:
     return snapshot
 
 
+@app.delete("/jobs/{job_id}")
+def delete_job(job_id: str) -> dict:
+    try:
+        manager.delete_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    return {"status": "deleted", "id": job_id}
+
+
 @app.post("/jobs/process")
 async def create_processing_job(
     raw_files: List[UploadFile] = File(..., description="Raw PDF essays to process"),
