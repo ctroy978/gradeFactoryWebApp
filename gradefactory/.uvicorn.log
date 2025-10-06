@@ -1,0 +1,6 @@
+INFO:     Started server process [25769]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    could not bind on any address out of [('127.0.0.1', 9000)]
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
